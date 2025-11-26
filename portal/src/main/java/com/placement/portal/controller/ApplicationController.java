@@ -82,7 +82,10 @@ public class ApplicationController {
     @GetMapping("/my-applications")
     public List<PlacementApplication> getMyApplications() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Student student = studentRepository.findByEmail(auth.getName()).orElseThrow();
+        String email = auth.getName();
+        Student student = studentRepository
+                .findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("Student not found for email: " + email));
         return applicationRepository.findByStudent(student);
     }
 

@@ -71,8 +71,8 @@ public class PlacementController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
-        Student student = studentRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Student student = studentRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new RuntimeException("Student not found for email: " + email));
 
         // Extract deep properties (Program Name & Specialisation Code)
         String domainProgram = (student.getDomain() != null) ? student.getDomain().getProgram() : "";

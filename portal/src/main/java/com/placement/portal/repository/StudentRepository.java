@@ -10,5 +10,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     // Must return Optional<Student> -> NOT Optional<User>
     Optional<Student> findByEmail(String email);
 
+    // Case-insensitive lookup to be more robust with OAuth providers
+    Optional<Student> findByEmailIgnoreCase(String email);
+
     boolean existsByEmail(String email);
 }

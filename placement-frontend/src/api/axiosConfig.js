@@ -1,8 +1,10 @@
 import axios from 'axios';
 
-// Create an axios instance pointing to the Spring Boot backend
+// Create an axios instance pointing to the backend.
+// In development, Vite proxies `/api` to `http://localhost:8080`,
+// so from the browser's perspective everything is same-origin (no CORS).
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api', // Ensure this matches your backend port and prefix
+    baseURL: '/api',
     headers: {
         'Content-Type': 'application/json',
     },

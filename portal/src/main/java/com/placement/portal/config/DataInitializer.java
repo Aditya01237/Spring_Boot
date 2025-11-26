@@ -73,8 +73,56 @@ public class DataInitializer {
                         createFilter(mTech, cse), createFilter(imTech, cse)
                 ), placementRepository);
 
-                // ... Add other companies similarly
-                System.out.println("✅ Dummy Companies Created");
+                // Additional sample companies for testing
+                createPlacement("Amazon", "SDE-II", "Distributed Systems", 8, 8.0, List.of(
+                        createFilter(mTech, cse), createFilter(mTech, dsai)
+                ), placementRepository);
+
+                createPlacement("Apple", "iOS Engineer", "Mobile Development", 6, 7.8, List.of(
+                        createFilter(mTech, cse)
+                ), placementRepository);
+
+                createPlacement("Meta", "Product Engineer", "Social Platform Features", 7, 8.2, List.of(
+                        createFilter(mTech, cse), createFilter(imTech, cse)
+                ), placementRepository);
+
+                createPlacement("Netflix", "Backend Engineer", "Streaming Platform", 4, 8.7, List.of(
+                        createFilter(mTech, cse), createFilter(mTech, dsai)
+                ), placementRepository);
+
+                createPlacement("Uber", "Backend Engineer", "Realtime Routing Systems", 9, 7.5, List.of(
+                        createFilter(mTech, cse), createFilter(imTech, cse), createFilter(mTech, dsai)
+                ), placementRepository);
+
+                createPlacement("Airbnb", "Full Stack Engineer", "Travel & Experiences", 5, 7.2, List.of(
+                        createFilter(mTech, cse), createFilter(imTech, cse)
+                ), placementRepository);
+
+                createPlacement("Adobe", "Software Engineer", "Creative Cloud Products", 6, 7.0, List.of(
+                        createFilter(mTech, cse)
+                ), placementRepository);
+
+                createPlacement("Salesforce", "Platform Developer", "CRM Platform", 10, 7.3, List.of(
+                        createFilter(mTech, cse), createFilter(imTech, cse)
+                ), placementRepository);
+
+                createPlacement("SAP", "Application Developer", "Enterprise Solutions", 12, 7.0, List.of(
+                        createFilter(mTech, cse), createFilter(mTech, dsai)
+                ), placementRepository);
+
+                createPlacement("Oracle", "Cloud Engineer", "Database & Cloud Services", 8, 7.6, List.of(
+                        createFilter(mTech, cse), createFilter(imTech, cse)
+                ), placementRepository);
+
+                createPlacement("Cisco", "Network Engineer", "Networking & Security", 6, 7.4, List.of(
+                        createFilter(mTech, cse), createFilter(imTech, cse)
+                ), placementRepository);
+
+                createPlacement("Intel", "Hardware / Software Engineer", "Processor & Tooling", 5, 7.8, List.of(
+                        createFilter(mTech, cse), createFilter(mTech, dsai), createFilter(imTech, cse)
+                ), placementRepository);
+
+                System.out.println("✅ Dummy Companies Created (Google, Microsoft + 10+ others)");
             }
         };
     }

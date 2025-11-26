@@ -1,6 +1,7 @@
 package com.placement.portal.config;
 
 import com.placement.portal.security.CustomOAuth2UserService;
+import com.placement.portal.security.JwtAuthFilter;
 import com.placement.portal.security.OAuth2LoginSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -10,13 +11,13 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.List;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -28,12 +29,31 @@ public class SecurityConfig {
     @Autowired
     private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 // 1. CORS must be the first thing configured
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
+
+                // Return 401 for unauthorized API calls instead of redirecting to OAuth login
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            // Ensure CORS headers are present even on 401 responses
+                            String origin = request.getHeader("Origin");
+                            if (origin != null) {
+                                response.setHeader("Access-Control-Allow-Origin", origin);
+                                response.setHeader("Vary", "Origin");
+                                response.setHeader("Access-Control-Allow-Credentials", "true");
+                            }
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\":\"Unauthorized\"}");
+                        })
+                )
 
                 // 2. Authorization
                 .authorizeHttpRequests(auth -> auth
@@ -52,7 +72,10 @@ public class SecurityConfig {
                         )
                         .successHandler(oAuth2LoginSuccessHandler)
                         .failureHandler(new SimpleUrlAuthenticationFailureHandler("http://localhost:5173/login?error=true"))
-                );
+                )
+
+                // 4. JWT filter to authenticate API calls using the token from the frontend
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -61,14 +84,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow the specific frontend origin
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        // Allow the Vite dev frontend; using originPatterns is more flexible for localhost
+        configuration.addAllowedOriginPattern("http://localhost:5173");
+        configuration.addAllowedOriginPattern("http://localhost:*");
 
         // Allow all standard methods
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+        configuration.addAllowedMethod("*");
 
         // Allow all headers (Authorization is the critical one)
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.addAllowedHeader("*");
 
         // Allow credentials (cookies/auth headers)
         configuration.setAllowCredentials(true);

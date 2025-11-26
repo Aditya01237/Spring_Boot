@@ -31,6 +31,13 @@ const Dashboard = () => {
       setPlacements(unappliedJobs);
     } catch (err) {
       console.error(err);
+      // If unauthorized, force re-login
+      if (err.response && err.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+        return;
+      }
       setError('Could not load jobs.');
     } finally {
       setLoading(false);
