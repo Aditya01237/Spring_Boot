@@ -1,5 +1,7 @@
 package com.placement.portal.controller;
 
+import com.placement.portal.dto.PlacementApplicationDto;
+import com.placement.portal.mapper.PlacementApplicationMapper;
 import com.placement.portal.model.Placement;
 import com.placement.portal.model.PlacementApplication;
 import com.placement.portal.model.Student;
@@ -17,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -80,13 +83,15 @@ public class ApplicationController {
 
     // 2. See My Applications History
     @GetMapping("/my-applications")
-    public List<PlacementApplication> getMyApplications() {
+    public List<PlacementApplicationDto> getMyApplications() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         Student student = studentRepository
                 .findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new RuntimeException("Student not found for email: " + email));
-        return applicationRepository.findByStudent(student);
+        return applicationRepository.findByStudent(student).stream()
+                .map(PlacementApplicationMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     // 3. Download CV Endpoint

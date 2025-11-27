@@ -1,5 +1,7 @@
 package com.placement.portal.controller;
 
+import com.placement.portal.dto.AuthResponseDto;
+import com.placement.portal.mapper.StudentMapper;
 import com.placement.portal.model.Student;
 import com.placement.portal.repository.StudentRepository;
 import com.placement.portal.security.JwtUtils;
@@ -10,7 +12,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -49,10 +50,7 @@ public class AuthController {
 
         String token = jwtUtils.generateToken(savedStudent.getEmail(), savedStudent.getRole());
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("user", savedStudent);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new AuthResponseDto(token, StudentMapper.toDto(savedStudent)));
     }
 
     @PostMapping("/login")
@@ -71,9 +69,6 @@ public class AuthController {
         Student student = studentRepository.findByEmail(email).orElseThrow();
         String token = jwtUtils.generateToken(student.getEmail(), student.getRole());
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("user", student);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new AuthResponseDto(token, StudentMapper.toDto(student)));
     }
 }

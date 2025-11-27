@@ -1,5 +1,7 @@
 package com.placement.portal.controller;
 
+import com.placement.portal.dto.PlacementDto;
+import com.placement.portal.mapper.PlacementMapper;
 import com.placement.portal.model.*;
 import com.placement.portal.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/placements")
@@ -29,7 +32,7 @@ public class PlacementController {
 
     // 1. Create Placement (Updated to prevent duplicates)
     @PostMapping("/create")
-    public Placement createPlacement(@RequestBody Placement placement) {
+    public PlacementDto createPlacement(@RequestBody Placement placement) {
         if (placement.getFilters() != null) {
             for (PlacementFilter filter : placement.getFilters()) {
                 // 1. Link the filter to the parent Placement
@@ -56,26 +59,30 @@ public class PlacementController {
                 }
             }
         }
-        return placementRepository.save(placement);
+        Placement saved = placementRepository.save(placement);
+        return PlacementMapper.toDto(saved);
     }
 
     // 2. Get All Placements
     @GetMapping("/all")
-    public List<Placement> getAllPlacements() {
-        return placementRepository.findAll();
+    public List<PlacementDto> getAllPlacements() {
+        return placementRepository.findAll().stream()
+                .map(PlacementMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     // 2b. Get Placement by ID (for detailed view)
     @GetMapping("/{id}")
-    public ResponseEntity<Placement> getPlacementById(@PathVariable Long id) {
+    public ResponseEntity<PlacementDto> getPlacementById(@PathVariable Long id) {
         return placementRepository.findById(id)
+                .map(PlacementMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     // 3. Get Eligible Placements
     @GetMapping("/eligible")
-    public ResponseEntity<List<Placement>> getEligiblePlacements() {
+    public ResponseEntity<List<PlacementDto>> getEligiblePlacements() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
@@ -86,11 +93,11 @@ public class PlacementController {
         String domainProgram = (student.getDomain() != null) ? student.getDomain().getProgram() : "";
         String specCode = (student.getSpecialisation() != null) ? student.getSpecialisation().getCode() : "";
 
-        List<Placement> list = placementRepository.findEligiblePlacements(
+        List<PlacementDto> list = placementRepository.findEligiblePlacements(
                 student.getCgpa(),
                 domainProgram,
                 specCode
-        );
+        ).stream().map(PlacementMapper::toDto).collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 }
