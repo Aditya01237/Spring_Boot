@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axiosConfig';
+import { PlacementApplication } from '../types';
 
 const MyApplications = () => {
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, accepted, pending
+  const [applications, setApplications] = useState<PlacementApplication[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [filter, setFilter] = useState<'all' | 'accepted' | 'pending'>('all'); // all, accepted, pending
 
-  const fetchApplications = async () => {
+  const fetchApplications = async (): Promise<void> => {
     try {
-      const response = await api.get('/applications/my-applications');
+      const response = await api.get<PlacementApplication[]>('/applications/my-applications');
       setApplications(response.data);
     } catch (error) {
       console.error("Failed to load application history", error);
@@ -17,10 +18,11 @@ const MyApplications = () => {
     }
   };
 
-  const handleDownload = async (filePath) => {
+  const handleDownload = async (filePath: string): Promise<void> => {
     if (!filePath) return;
     
     const filename = filePath.split('/').pop();
+    if (!filename) return;
     
     try {
       const response = await api.get(`/applications/download/${filename}`, {
@@ -179,7 +181,7 @@ const MyApplications = () => {
                     <div className="pt-2">
                       {app.cvFilePath ? (
                         <button
-                          onClick={() => handleDownload(app.cvFilePath)}
+                          onClick={() => handleDownload(app.cvFilePath!)}
                           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-black text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,3 +208,4 @@ const MyApplications = () => {
 };
 
 export default MyApplications;
+

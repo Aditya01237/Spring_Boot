@@ -65,6 +65,14 @@ public class PlacementController {
         return placementRepository.findAll();
     }
 
+    // 2b. Get Placement by ID (for detailed view)
+    @GetMapping("/{id}")
+    public ResponseEntity<Placement> getPlacementById(@PathVariable Long id) {
+        return placementRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // 3. Get Eligible Placements
     @GetMapping("/eligible")
     public ResponseEntity<List<Placement>> getEligiblePlacements() {

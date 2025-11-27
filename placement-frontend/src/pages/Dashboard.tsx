@@ -1,20 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axiosConfig';
-import ApplicationModal from '../components/ApplicationModal';
+import { Placement, Student } from '../types';
 
 const Dashboard = () => {
-  const [placements, setPlacements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [placements, setPlacements] = useState<Placement[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPlacement, setSelectedPlacement] = useState(null);
-  
-  const student = JSON.parse(localStorage.getItem('user') || '{}');
+  const [student, setStudent] = useState<Student | null>(null);
+  const [studentLoading, setStudentLoading] = useState<boolean>(true);
 
-  const fetchData = async () => {
+  const fetchData = async (): Promise<void> => {
     try {
       if (!localStorage.getItem('token')) {
         navigate('/login');
@@ -22,14 +19,14 @@ const Dashboard = () => {
       }
 
       const [jobsRes, appsRes] = await Promise.all([
-        api.get('/placements/eligible'),
+        api.get<Placement[]>('/placements/eligible'),
         api.get('/applications/my-applications')
       ]);
 
-      const appliedIds = new Set(appsRes.data.map(app => app.placement.id));
+      const appliedIds = new Set(appsRes.data.map((app: any) => app.placement.id));
       const unappliedJobs = jobsRes.data.filter(job => !appliedIds.has(job.id));
       setPlacements(unappliedJobs);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       // If unauthorized, force re-login
       if (err.response && err.response.status === 401) {
@@ -46,38 +43,38 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchData();
+    fetchStudent();
   }, []);
 
-  const openModal = (job) => {
-    setSelectedPlacement(job);
-    setIsModalOpen(true);
+  const fetchStudent = async (): Promise<void> => {
+    try {
+      const res = await api.get<Student>('/students/me');
+      setStudent(res.data);
+      localStorage.setItem('user', JSON.stringify(res.data));
+    } catch (err) {
+      console.error('Failed to fetch student', err);
+    } finally {
+      setStudentLoading(false);
+    }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedPlacement(null);
-    fetchData();
+  const openDetails = (job: Placement): void => {
+    navigate(`/placements/${job.id}`, { state: { placement: job } });
   };
 
-  const filteredPlacements = placements.filter(job => {
-    if (filter === 'all') return true;
-    if (filter === 'high') return job.minimumGrade >= 8.0;
-    if (filter === 'medium') return job.minimumGrade >= 7.0 && job.minimumGrade < 8.0;
-    if (filter === 'low') return job.minimumGrade < 7.0;
-    return true;
-  });
+  const filteredPlacements = placements;
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (loading || studentLoading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   if (error) return <div className="flex items-center justify-center min-h-screen text-red-600">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section with gradient accent */}
-        <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome, {student.firstName} {student.lastName}
-          </h1>
+          <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome{student ? `, ${student.firstName} ${student.lastName}` : ' to the Placement Portal'}
+            </h1>
           <p className="text-gray-600 flex items-center gap-2">
             You are eligible for <span className="font-semibold text-blue-600">{placements.length}</span> roles based on your profile.
           </p>
@@ -94,7 +91,8 @@ const Dashboard = () => {
             {filteredPlacements.map((job) => (
               <div
                 key={job.id}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:border-blue-200 transition-all"
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl hover:border-blue-200 transition-all cursor-pointer"
+                onClick={() => openDetails(job)}
               >
                 {/* Card Header with blue accent */}
                 <div className="p-6 pb-4 border-b border-gray-100 bg-gradient-to-br from-white to-blue-50">
@@ -124,10 +122,13 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <button
-                      onClick={() => openModal(job)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openDetails(job);
+                      }}
                       className="bg-black text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-blue-600 transition-colors shadow-sm"
                     >
-                      Apply
+                      View details
                     </button>
                   </div>
                 </div>
@@ -136,16 +137,10 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Application Modal */}
-        {isModalOpen && selectedPlacement && (
-          <ApplicationModal
-            placement={selectedPlacement}
-            onClose={closeModal}
-          />
-        )}
       </div>
     </div>
   );
 };
 
 export default Dashboard;
+

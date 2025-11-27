@@ -3,6 +3,7 @@ package com.placement.portal.config;
 import com.placement.portal.security.CustomOAuth2UserService;
 import com.placement.portal.security.JwtAuthFilter;
 import com.placement.portal.security.OAuth2LoginSuccessHandler;
+import com.placement.portal.security.OAuth2LoginFailureHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +13,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -28,6 +28,9 @@ public class SecurityConfig {
 
     @Autowired
     private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
+    @Autowired
+    private OAuth2LoginFailureHandler oAuth2LoginFailureHandler;
 
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
@@ -60,7 +63,7 @@ public class SecurityConfig {
                         // Explicitly permit all OPTIONS requests to avoid 401/302 on preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Public endpoints
-                        .requestMatchers("/", "/login", "/error", "/oauth2/**").permitAll()
+                        .requestMatchers("/", "/login", "/error", "/oauth2/**", "/api/auth/**").permitAll()
                         // All other endpoints
                         .anyRequest().authenticated()
                 )
@@ -71,7 +74,7 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService)
                         )
                         .successHandler(oAuth2LoginSuccessHandler)
-                        .failureHandler(new SimpleUrlAuthenticationFailureHandler("http://localhost:5173/login?error=true"))
+                        .failureHandler(oAuth2LoginFailureHandler)
                 )
 
                 // 4. JWT filter to authenticate API calls using the token from the frontend

@@ -4,7 +4,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
@@ -52,3 +52,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

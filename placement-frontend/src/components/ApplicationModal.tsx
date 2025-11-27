@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import api from '../api/axiosConfig';
+import { Placement } from '../types';
 
-const ApplicationModal = ({ placement, onClose }) => {
-  const [aboutText, setAboutText] = useState('');
-  const [cvFile, setCvFile] = useState(null);
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+interface ApplicationModalProps {
+  placement: Placement;
+  onClose: () => void;
+}
+
+const ApplicationModal = ({ placement, onClose }: ApplicationModalProps) => {
+  const [aboutText, setAboutText] = useState<string>('');
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [error, setError] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   // Handler for file selection
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0];
     if (file) {
       // Validate file type and size
       if (file.type === 'application/pdf') {
@@ -18,18 +24,18 @@ const ApplicationModal = ({ placement, onClose }) => {
           setError('');
         } else {
           alert("File size must be less than 5MB");
-          e.target.value = null;
+          e.target.value = '';
           setCvFile(null);
         }
       } else {
         alert("Please upload a file in PDF format (.pdf)");
-        e.target.value = null;
+        e.target.value = '';
         setCvFile(null);
       }
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setSubmitting(true);
@@ -62,7 +68,7 @@ const ApplicationModal = ({ placement, onClose }) => {
 
       alert('Application and CV submitted successfully!');
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Application submission error:', err);
       const errorMessage = err.response?.data?.error || 
                           err.response?.data?.message || 
@@ -92,7 +98,7 @@ const ApplicationModal = ({ placement, onClose }) => {
             </label>
             <textarea
               id="about"
-              rows="4"
+              rows={4}
               value={aboutText}
               onChange={(e) => setAboutText(e.target.value)}
               className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
@@ -142,7 +148,8 @@ const ApplicationModal = ({ placement, onClose }) => {
                   type="button"
                   onClick={() => {
                     setCvFile(null);
-                    document.getElementById('cvFile').value = null;
+                    const input = document.getElementById('cvFile') as HTMLInputElement;
+                    if (input) input.value = '';
                   }}
                   className="ml-2 text-red-500 hover:text-red-700"
                 >
@@ -182,3 +189,4 @@ const ApplicationModal = ({ placement, onClose }) => {
 };
 
 export default ApplicationModal;
+

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
@@ -30,8 +31,18 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         String email = oAuth2User.getAttribute("email");
 
         // Fetch the student from DB to get Role and Details
-        Student student = studentRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+        Optional<Student> studentOptional = studentRepository.findByEmail(email);
+        
+        // Safety check: if student not found, redirect to login with error
+        if (studentOptional.isEmpty()) {
+            String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/login")
+                    .queryParam("error", "invalid_credentials")
+                    .build().toUriString();
+            getRedirectStrategy().sendRedirect(request, response, targetUrl);
+            return;
+        }
+        
+        Student student = studentOptional.get();
 
         // Generate JWT Token
         String token = jwtUtils.generateToken(student.getEmail(), student.getRole());
@@ -39,7 +50,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         // Build the Frontend URL with the Token as a parameter
         String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:5173/login")
                 .queryParam("token", token)
-                .queryParam("error", "")
                 .build().toUriString();
 
         // Redirect user to Frontend with the Token

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { InternalAxiosRequestConfig } from 'axios';
 
 // Create an axios instance pointing to the backend.
 // In development, Vite proxies `/api` to `http://localhost:8080`,
@@ -12,9 +12,9 @@ const api = axios.create({
 
 // Request Interceptor: Automatically attach the JWT token to every protected request
 api.interceptors.request.use(
-    (config) => {
+    (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('token');
-        if (token) {
+        if (token && config.headers) {
             // Spring Security requires the header format: Authorization: Bearer [TOKEN]
             config.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -26,3 +26,4 @@ api.interceptors.request.use(
 );
 
 export default api;
+
