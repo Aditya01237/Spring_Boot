@@ -1,0 +1,48 @@
+- name: Deploy Placement Portal
+  hosts: local
+  tasks:
+    - name: Stop old backend container
+      shell: docker rm -f backend || true
+
+    - name: Stop old mysql container
+      shell: docker rm -f mysql || true
+
+    - name: Stop old frontend container
+      shell: docker rm -f frontend || true
+
+    - name: Create docker network
+      shell: docker network create placement-net || true
+
+    - name: Create mysql volume
+      shell: docker volume create mysql-data || true
+
+    - name: Run MySQL container
+      shell: >
+        docker run -d
+        --name mysql
+        --network placement-net
+        -e MYSQL_ROOT_PASSWORD=root
+        -e MYSQL_DATABASE=placement
+        -v mysql-data:/var/lib/mysql
+        mysql:8
+
+    - name: Wait for MySQL to be ready
+      shell: sleep 15
+
+    - name: Run Backend container
+      shell: >
+        docker run -d
+        --name backend
+        --network placement-net
+        -p 9090:8080
+        -e SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID={{ google_client_id }}
+        -e SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET={{ google_client_secret }}
+        placement-backend
+
+    - name: Run Frontend container
+      shell: >
+        docker run -d
+        --name frontend
+        --network placement-net
+        -p 80:80
+        placement-frontend
