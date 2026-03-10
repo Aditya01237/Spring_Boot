@@ -1,6 +1,6 @@
 # 🎓 Placement Portal
 
-A production-grade full-stack Placement Portal with Google OAuth2 authentication, JWT-based authorization, and a fully automated CI/CD pipeline using Jenkins and Ansible.
+A production-grade full-stack Placement Portal with Google OAuth2 authentication, JWT-based authorization, and a fully automated CI/CD pipeline using Jenkins and Ansible .
 
 ---
 
